@@ -1,0 +1,95 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+*.pyc
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Environment / Secrets
+.env
+credentials.json
+*.json.key
+
+# Database
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+
+# Dataset (student face images - never commit)
+dataset/
+Backend/dataset/
+
+# AI Model weights (large binary files)
+*.pt
+*.pth
+*.onnx
+*.pkl
+models/
+Backend/models/
+
+# Logs
+logs/
+*.log
+
+# Node / Frontend
+node_modules/
+Frontend/node_modules/
+Frontend/dist/
+Frontend/.vite/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Exports
+*.csv
+*.xlsx
+
+# Installer / wheel files
+*.whl
+
+# Diagnostic / temp scripts (not part of the app)
+Backend/check_*.py
+Backend/test_*.py
+Backend/debug_*.py
+Backend/diag_*.py
+Backend/api_sim*.py
+Backend/force_sync.py
+Backend/seed*.py
+Backend/unfinalize.py
+Backend/cleanup_*.py
+Backend/migrate_*.py
+Backend/load_embeddings.py
+Backend/merge_*.py
+
+# Debug output text files
+Backend/*.txt
+
+# Old root-level files (moved to Backend/)
+attendance_engine.py
+analytics.py
+app.py
+config.py
+database.py
+embedding_cache.py
+face_quality.py
+liveness.py
+logger_setup.py
+register_faces.py
+tracker.py
+implementation_plan.txt

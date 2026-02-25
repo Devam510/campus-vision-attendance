@@ -1,0 +1,19 @@
+# Core CV & detection
+ultralytics>=8.0.0
+opencv-python>=4.8.0
+numpy>=1.24.0,<2             # insightface requires numpy <2
+
+# Face recognition (ArcFace ONNX - no TensorFlow required)
+# Windows: install pre-built wheel from https://github.com/Gourieff/Assets
+#   pip install insightface-0.7.3-cp312-cp312-win_amd64.whl
+insightface>=0.7.3
+onnxruntime>=1.16.0          # CPU; swap for onnxruntime-gpu for CUDA
+
+# Multi-object tracking (ByteTrack)
+boxmot>=10.0.0
+
+# Web server
+flask>=3.0.0
+
+# Utilities
+scipy>=1.11.0

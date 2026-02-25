@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI-Powered Real-Time Classroom Attendance System">
+    <title>AI Attendance System</title>
+    <link rel="stylesheet" href="/static/css/style.css?v=2">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- ═══════════════════ HEADER ═══════════════════ -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo-icon">👁️</div>
+            <h1>AI Attendance</h1>
+        </div>
+        <div class="header-stats" id="stats-bar">
+            <div class="stat-card">
+                <span class="stat-value" id="stat-registered">0</span>
+                <span class="stat-label">Registered</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="stat-detected">0</span>
+                <span class="stat-label">Detected</span>
+            </div>
+            <div class="stat-card stat-present">
+                <span class="stat-value" id="stat-present">0</span>
+                <span class="stat-label">Present</span>
+            </div>
+            <div class="stat-card stat-absent">
+                <span class="stat-value" id="stat-absent">0</span>
+                <span class="stat-label">Absent</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="engine-status" id="engine-status">⏹ Stopped</span>
+        </div>
+    </header>
+
+    <!-- ═══════════════════ MAIN GRID ═══════════════════ -->
+    <main class="main-grid">
+        <!-- LEFT: Camera Feed -->
+        <section class="panel feed-panel">
+            <div class="panel-header">
+                <h2>📹 Live Feed</h2>
+                <div class="engine-controls">
+                    <button class="btn btn-start" id="btn-start" onclick="startEngine()">▶ Start</button>
+                    <button class="btn btn-stop" id="btn-stop" onclick="stopEngine()" disabled>⏹ Stop</button>
+                </div>
+            </div>
+            <div class="feed-container">
+                <img id="video-feed" src="/video_feed" alt="Camera Feed">
+                <div class="feed-overlay" id="feed-overlay">
+                    <span>Engine not running</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- RIGHT: Controls + Data -->
+        <section class="panel control-panel">
+            <!-- Lecture Management -->
+            <div class="sub-panel">
+                <h3>📚 Lecture Management</h3>
+                <form id="lecture-form" onsubmit="createLecture(event)">
+                    <div class="form-row">
+                        <input type="text" id="lec-name" placeholder="Lecture Name" required>
+                        <input type="date" id="lec-date" required>
+                    </div>
+                    <div class="form-row">
+                        <input type="time" id="lec-start" required>
+                        <input type="time" id="lec-end" required>
+                        <input type="number" id="lec-min" placeholder="Min. Minutes" value="30" min="1" max="180" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Lecture</button>
+                </form>
+                <div class="lecture-list" id="lecture-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Active Lecture Indicator -->
+            <div class="sub-panel active-lecture-panel" id="active-lecture-panel" style="display:none;">
+                <h3>🟢 Active Lecture</h3>
+                <div class="active-lecture-info">
+                    <span class="active-name" id="active-name">-</span>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progress-bar"></div>
+                    </div>
+                    <span class="time-remaining" id="time-remaining">-</span>
+                </div>
+            </div>
+
+            <!-- Live Presence Table -->
+            <div class="sub-panel">
+                <div class="sub-panel-header">
+                    <h3>👥 Live Presence</h3>
+                    <button class="btn btn-sm btn-export" id="btn-export" onclick="exportCSV()" disabled>📥 CSV</button>
+                </div>
+                <div class="table-container">
+                    <table id="presence-table">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>First Seen</th>
+                                <th>Present Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="presence-body">
+                            <tr class="empty-row">
+                                <td colspan="4">No data yet</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Final Attendance (after lecture ends) -->
+            <div class="sub-panel" id="final-panel" style="display:none;">
+                <h3>📋 Final Attendance</h3>
+                <div class="table-container">
+                    <table id="final-table">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Total Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="final-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ═══════════════════ TOAST ═══════════════════ -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/static/js/app.js?v=2"></script>
+</body>
+</html>
