@@ -387,6 +387,74 @@ async def register_face(
     return student
 
 
+@router.post("/check-frame")
+async def check_frame(
+    image: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Real-time single frame check for UI feedback during registration.
+    Returns 400 with a specific error message if the frame is not viable.
+    """
+    raw = await image.read()
+    if not raw:
+        raise HTTPException(status_code=400, detail="Empty frame")
+    
+    def _check(frame_bytes):
+        np_arr = np.frombuffer(frame_bytes, np.uint8)
+        img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+        if img is None:
+            return "Corrupt frame"
+            
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        if _laplacian_sharpness(gray) < SHARPNESS_THRESHOLD:
+            return "Lighting is poor or face is blurry. Keep steady."
+            
+        try:
+            face_app = _get_face_app()
+        except ImportError:
+            return "Server error: InsightFace not installed."
+            
+        faces = face_app.get(img)
+        if len(faces) == 0:
+            return "No face found. Look at the camera."
+        if len(faces) > 1:
+            return "Multiple faces detected. Only one person allowed."
+            
+        face = faces[0]
+        if float(getattr(face, "det_score", 1.0)) < FACE_CONF_THRESHOLD:
+            return "Face not clearly visible. Improve lighting."
+            
+        bbox = face.bbox
+        face_w = bbox[2] - bbox[0]
+        face_h = bbox[3] - bbox[1]
+        
+        img_h, img_w = img.shape[:2]
+        
+        # dynamic min size: at least 10% of the shortest side (reduced from 15%)
+        min_size = min(img_w, img_h) * 0.10 
+        if face_w < min_size or face_h < min_size:
+            return f"Move closer. Your face is {int(face_w)}x{int(face_h)}px (needs {int(min_size)}px)."
+            
+        face_cx = (bbox[0] + bbox[2]) / 2.0
+        face_cy = (bbox[1] + bbox[3]) / 2.0
+        img_cx, img_cy = img_w / 2.0, img_h / 2.0
+        dist_from_center = ((face_cx - img_cx)**2 + (face_cy - img_cy)**2)**0.5
+        
+        # less strict centering max distance: 25% of image width
+        max_dist = img_w * 0.25
+        if dist_from_center > max_dist:
+            return f"Center your face. You are {int(dist_from_center)}px from center (max {int(max_dist)}px)."
+            
+        return None
+
+    error_msg = await _asyncio.to_thread(_check, raw)
+    if error_msg:
+        raise HTTPException(status_code=400, detail=error_msg)
+        
+    return {"ok": True}
+
+
 @router.delete("/{student_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_student(
     student_id: int,

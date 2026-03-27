@@ -102,6 +102,7 @@ export default function FaceScanModal({ student, classroomKey, onClose, onSucces
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);  // { icon, title, body }
     const [done, setDone] = useState(false);
+    const [liveFeedback, setLiveFeedback] = useState(null);
 
     /* Start webcam */
     useEffect(() => {
@@ -158,6 +159,19 @@ export default function FaceScanModal({ student, classroomKey, onClose, onSucces
             const blob = await captureFrame();
             if (!blob) return;
 
+            // --- Real-time backend validation ---
+            try {
+                const fd = new FormData();
+                fd.append("image", blob, "frame.jpg");
+                await api.post(`/students/check-frame`, fd);
+                setLiveFeedback(null); // Clear errors, frame is good
+            } catch (e) {
+                const detail = e.response?.data?.detail || "Scanning face...";
+                setLiveFeedback(detail);
+                return; // Do NOT increment progress!
+            }
+            // ------------------------------------
+
             framesRef.current = [...framesRef.current, blob];
             const newStep = framesRef.current.length;   // 1-5
             setStep(newStep);
@@ -201,6 +215,7 @@ export default function FaceScanModal({ student, classroomKey, onClose, onSucces
         setError(null);
         setDone(false);
         setSubmitting(false);
+        setLiveFeedback(null);
 
         navigator.mediaDevices
             .getUserMedia({ video: { width: 640, height: 480, facingMode: "user" } })
@@ -292,12 +307,13 @@ export default function FaceScanModal({ student, classroomKey, onClose, onSucces
             {/* Step guidance */}
             {!error && (
                 <div style={{
-                    fontSize: 15, color: "rgba(255,255,255,0.85)",
+                    fontSize: 15, color: liveFeedback ? "#fca5a5" : "rgba(255,255,255,0.85)",
                     textAlign: "center", marginBottom: 24,
                     minHeight: 24,
                     transition: "opacity 0.3s",
+                    fontWeight: liveFeedback ? 600 : 400,
                 }}>
-                    {submitting ? "Uploading and verifying…" : currentStep.text}
+                    {submitting ? "Uploading and verifying…" : (liveFeedback || currentStep.text)}
                 </div>
             )}
 
