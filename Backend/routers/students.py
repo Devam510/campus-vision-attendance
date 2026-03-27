@@ -119,6 +119,7 @@ def _process_frames(raw_frames: list[bytes]) -> dict:
     valid_embeddings: list[np.ndarray] = []  # normed embeddings from inlier frames
     liveness_fail_count = 0
     total_face_frames = 0  # frames that passed quality + single-face gate
+    uncentered_count = 0
 
     for raw in raw_frames:
         # Decode image
@@ -147,6 +148,19 @@ def _process_frames(raw_frames: list[bytes]) -> dict:
         face_h = bbox[3] - bbox[1]
         if face_w < MIN_FACE_PX or face_h < MIN_FACE_PX:
             continue  # face too small
+
+        # ── Gate 2.5: Centering ──
+        img_h, img_w = img.shape[:2]
+        face_cx = (bbox[0] + bbox[2]) / 2.0
+        face_cy = (bbox[1] + bbox[3]) / 2.0
+        
+        img_cx, img_cy = img_w / 2.0, img_h / 2.0
+        
+        dist_from_center = ((face_cx - img_cx)**2 + (face_cy - img_cy)**2)**0.5
+        max_dist = img_w * 0.15  # 15% tolerance
+        if dist_from_center > max_dist:
+            uncentered_count += 1
+            continue  # skip this frame because it's not centered
 
         total_face_frames += 1
 
@@ -181,6 +195,8 @@ def _process_frames(raw_frames: list[bytes]) -> dict:
             return {"ok": False, "error_code": "liveness_fail"}
 
     if len(valid_embeddings) == 0:
+        if uncentered_count > 0:
+            return {"ok": False, "error_code": "not_centered"}
         return {"ok": False, "error_code": "no_valid_frames"}
 
     # ── Gate 5: Outlier rejection ─────────────────────────────────────────────
@@ -342,6 +358,11 @@ async def register_face(
             raise HTTPException(
                 status_code=400,
                 detail="Live face required — printed photo or spoof detected. Please use a real face.",
+            )
+        if code == "not_centered":
+            raise HTTPException(
+                status_code=400,
+                detail="Face not centered. Please align your face in the center of the circle.",
             )
         if code == "no_valid_frames":
             raise HTTPException(

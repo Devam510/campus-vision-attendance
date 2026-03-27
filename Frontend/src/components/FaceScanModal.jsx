@@ -32,6 +32,8 @@ const CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS;
 function getFriendlyError(detail = "") {
     if (detail.includes("spoof") || detail.includes("Live face"))
         return { icon: "🚫", title: "Live Face Required", body: "A printed photo or screen was detected. Please use a real face in good lighting." };
+    if (detail.includes("centered") || detail.includes("align your face"))
+        return { icon: "🎯", title: "Face Not Centered", body: "Please keep your face fully inside the center circle." };
     if (detail.includes("blur") || detail.includes("valid face"))
         return { icon: "💡", title: "Improve Lighting", body: "No sharp face found. Move to better light and keep your face centred." };
     if (detail.includes("diversity") || detail.includes("pose"))
